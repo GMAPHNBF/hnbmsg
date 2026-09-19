@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HNBF MESSAGE HUB · Calls</title>
+    <title>HNBF MESSAGE HUB · Firebase Calls</title>
+
+    <!-- Firebase SDK (compat version for browser) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -21,1072 +22,446 @@
         }
 
         .container {
-            width: 100%;
-            max-width: 1200px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            display: flex;
-            height: 90vh;
+            width: 100%; max-width: 1200px; background: white;
+            border-radius: 15px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden; display: flex; height: 90vh;
         }
 
-        /* Auth Screen */
         .auth-screen {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        .auth-container {
-            display: flex;
-            gap: 20px;
-            width: 90%;
-            max-width: 900px;
-        }
+        .auth-container { display: flex; gap: 20px; width: 90%; max-width: 900px; }
 
         .auth-box {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
+            background: white; padding: 40px; border-radius: 15px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            flex: 1;
-            min-width: 350px;
+            flex: 1; min-width: 350px;
         }
 
-        .auth-box h1 {
-            color: #667eea;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 24px;
-        }
+        .auth-box h1 { color: #667eea; margin-bottom: 10px; text-align: center; font-size: 24px; }
+        .auth-box .subtitle { text-align: center; color: #999; margin-bottom: 30px; font-size: 13px; }
 
-        .auth-box .subtitle {
-            text-align: center;
-            color: #999;
-            margin-bottom: 30px;
-            font-size: 13px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 14px; }
         .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
+            width: 100%; padding: 12px; border: 2px solid #e0e0e0;
+            border-radius: 8px; font-size: 14px; transition: border-color 0.3s;
         }
+        .form-group input:focus { outline: none; border-color: #667eea; }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .password-strength {
-            font-size: 12px;
-            margin-top: 5px;
-            padding: 5px;
-            border-radius: 4px;
-            text-align: center;
-        }
-
-        .strength-weak {
-            background: #ffcdd2;
-            color: #c62828;
-        }
-
-        .strength-medium {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .strength-strong {
-            background: #d4edda;
-            color: #155724;
-        }
+        .password-strength { font-size: 12px; margin-top: 5px; padding: 5px; border-radius: 4px; text-align: center; }
+        .strength-weak { background: #ffcdd2; color: #c62828; }
+        .strength-medium { background: #fff3cd; color: #856404; }
+        .strength-strong { background: #d4edda; color: #155724; }
 
         .btn {
-            width: 100%;
-            padding: 12px;
+            width: 100%; padding: 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-            margin-top: 10px;
+            color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            transition: transform 0.2s; margin-top: 10px;
         }
+        .btn:hover { transform: translateY(-2px); }
 
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .toggle-form {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 13px;
-            color: #999;
-        }
-
+        .toggle-form { text-align: center; margin-top: 20px; font-size: 13px; color: #999; }
         .toggle-form button {
-            background: none;
-            border: none;
-            color: #667eea;
-            cursor: pointer;
-            font-weight: 600;
-            text-decoration: underline;
+            background: none; border: none; color: #667eea;
+            cursor: pointer; font-weight: 600; text-decoration: underline;
         }
 
-        /* Sidebar */
         .sidebar {
-            width: 300px;
-            background: #f8f9fa;
+            width: 300px; background: #f8f9fa;
             border-right: 1px solid #e0e0e0;
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
         }
 
         .sidebar-header {
             padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-bottom: 1px solid #e0e0e0;
+            color: white; border-bottom: 1px solid #e0e0e0;
         }
 
-        .app-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .user-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-            cursor: pointer;
-            transition: opacity 0.3s;
-        }
-
-        .user-profile:hover {
-            opacity: 0.8;
-        }
-
-        .avatar-container {
-            position: relative;
-        }
+        .app-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; text-align: center; }
+        .user-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .user-profile { display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; transition: opacity 0.3s; }
+        .user-profile:hover { opacity: 0.8; }
+        .avatar-container { position: relative; }
 
         .avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #667eea;
-            font-weight: bold;
-            object-fit: cover;
-            border: 2px solid white;
+            width: 45px; height: 45px; border-radius: 50%;
+            background: white; display: flex; align-items: center;
+            justify-content: center; color: #667eea; font-weight: bold;
+            object-fit: cover; border: 2px solid white;
         }
 
         .online-indicator {
-            width: 12px;
-            height: 12px;
-            background: #4caf50;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            border: 2px solid white;
+            width: 12px; height: 12px; background: #4caf50;
+            border-radius: 50%; position: absolute; bottom: 0;
+            right: 0; border: 2px solid white;
         }
 
-        .user-details {
-            flex: 1;
-        }
-
-        .user-name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .user-status {
-            opacity: 0.8;
-            font-size: 11px;
-        }
+        .user-details { flex: 1; }
+        .user-name { font-weight: 600; font-size: 14px; }
+        .user-status { opacity: 0.8; font-size: 11px; }
 
         .logout-btn {
-            background: white;
-            color: #667eea;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
+            background: white; color: #667eea; border: none;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-weight: 600;
         }
 
-        .sidebar-menu {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
+        .sidebar-menu { flex: 1; overflow-y: auto; padding: 10px; }
 
         .menu-btn {
-            width: 100%;
-            padding: 12px 15px;
-            background: white;
-            border: none;
-            border-left: 3px solid transparent;
-            text-align: left;
-            cursor: pointer;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            transition: all 0.3s;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            width: 100%; padding: 12px 15px; background: white;
+            border: none; border-left: 3px solid transparent;
+            text-align: left; cursor: pointer; margin-bottom: 8px;
+            border-radius: 8px; transition: all 0.3s; font-size: 14px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .menu-btn:hover {
-            background: #e8eef7;
-        }
-
-        .menu-btn.active {
-            background: #667eea;
-            color: white;
-            border-left-color: #764ba2;
-        }
+        .menu-btn:hover { background: #e8eef7; }
+        .menu-btn.active { background: #667eea; color: white; border-left-color: #764ba2; }
 
         .unread-badge {
-            background: #ff4444;
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 11px;
-            font-weight: 600;
+            background: #ff4444; color: white; border-radius: 12px;
+            padding: 2px 8px; font-size: 11px; font-weight: 600;
         }
 
-        .sidebar-footer {
-            padding: 15px;
-            border-top: 1px solid #e0e0e0;
-            display: flex;
-            gap: 10px;
-        }
-
+        .sidebar-footer { padding: 15px; border-top: 1px solid #e0e0e0; display: flex; gap: 10px; }
         .sidebar-footer button {
-            flex: 1;
-            padding: 10px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
+            flex: 1; padding: 10px; background: #667eea; color: white;
+            border: none; border-radius: 6px; cursor: pointer;
+            font-size: 13px; font-weight: 600;
         }
 
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            position: relative;
-        }
+        .main-content { flex: 1; display: flex; flex-direction: column; background: white; position: relative; }
 
         .content-header {
             padding: 15px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e0e0e0;
+            color: white; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid #e0e0e0;
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header-info h2 { font-size: 16px; margin-bottom: 3px; }
+        .header-status { font-size: 12px; opacity: 0.9; display: flex; align-items: center; gap: 5px; }
 
-        .header-info h2 {
-            font-size: 16px;
-            margin-bottom: 3px;
-        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-dot.online { background: #4caf50; }
+        .status-dot.offline { background: #999; }
 
-        .header-status {
-            font-size: 12px;
-            opacity: 0.9;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .status-dot.online {
-            background: #4caf50;
-        }
-
-        .status-dot.offline {
-            background: #999;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 8px;
-        }
+        .header-actions { display: flex; gap: 8px; }
 
         .call-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            padding: 8px 14px; border-radius: 8px; cursor: pointer;
+            font-size: 16px; transition: all 0.2s;
+            display: flex; align-items: center; gap: 5px;
         }
+        .call-btn:hover { background: rgba(255,255,255,0.35); }
+        .call-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .call-btn:hover {
-            background: rgba(255,255,255,0.35);
-        }
-
-        .call-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .messages-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #f8f9fa;
-        }
+        .messages-area { flex: 1; overflow-y: auto; padding: 20px; background: #f8f9fa; }
 
         .message {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
+            margin-bottom: 15px; display: flex; gap: 10px;
             animation: slideIn 0.3s ease-out;
         }
 
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .message.own {
-            justify-content: flex-end;
-        }
+        .message.own { justify-content: flex-end; }
 
         .message-bubble {
-            max-width: 60%;
-            padding: 12px 15px;
-            border-radius: 12px;
-            word-wrap: break-word;
+            max-width: 60%; padding: 12px 15px;
+            border-radius: 12px; word-wrap: break-word;
         }
 
-        .message.own .message-bubble {
-            background: #667eea;
-            color: white;
-        }
-
+        .message.own .message-bubble { background: #667eea; color: white; }
         .message:not(.own) .message-bubble {
-            background: white;
-            color: #333;
-            border: 1px solid #e0e0e0;
+            background: white; color: #333; border: 1px solid #e0e0e0;
         }
 
-        .message-image {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 8px;
-        }
-
-        .message-sender {
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: #667eea;
-        }
+        .message-image { max-width: 100%; border-radius: 8px; margin-top: 8px; }
+        .message-sender { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #667eea; }
 
         .message-meta {
-            font-size: 11px;
-            margin-top: 4px;
-            opacity: 0.7;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            font-size: 11px; margin-top: 4px; opacity: 0.7;
+            display: flex; align-items: center; gap: 4px;
         }
 
-        /* Input Area */
         .input-area {
-            padding: 15px 20px;
-            background: white;
-            border-top: 1px solid #e0e0e0;
-            display: flex;
-            gap: 10px;
-            align-items: center;
+            padding: 15px 20px; background: white;
+            border-top: 1px solid #e0e0e0; display: flex;
+            gap: 10px; align-items: center;
         }
 
         .input-area input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
+            flex: 1; padding: 12px; border: 2px solid #e0e0e0;
+            border-radius: 8px; font-size: 14px;
         }
 
-        .input-area input[type="file"] {
-            display: none;
-        }
+        .input-area input[type="file"] { display: none; }
 
         .input-area button {
-            padding: 12px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
+            padding: 12px 20px; background: #667eea; color: white;
+            border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
         }
 
         .icon-btn {
-            padding: 12px 15px;
-            background: #f0f0f0;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 12px 15px; background: #f0f0f0; border: none;
+            border-radius: 8px; cursor: pointer; font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .voice-btn {
-            background: #e8eef7;
-            color: #667eea;
-            font-weight: 600;
-            transition: all 0.2s;
+            background: #e8eef7; color: #667eea;
+            font-weight: 600; transition: all 0.2s;
         }
 
         .voice-btn.recording {
-            background: #ff4444;
-            color: white;
+            background: #ff4444; color: white;
             animation: pulse 1s infinite;
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
+            0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; }
         }
 
-        /* Modal */
         .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5); z-index: 1000;
+            align-items: center; justify-content: center;
         }
-
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
 
         .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
+            background: white; padding: 30px; border-radius: 15px;
+            width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;
         }
 
-        .modal-content h2 {
-            margin-bottom: 20px;
-            color: #667eea;
-            text-align: center;
-        }
+        .modal-content h2 { margin-bottom: 20px; color: #667eea; text-align: center; }
 
         .search-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
+            width: 100%; padding: 12px; border: 2px solid #e0e0e0;
+            border-radius: 8px; margin-bottom: 20px; font-size: 14px;
         }
 
-        .user-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
+        .user-list { max-height: 400px; overflow-y: auto; }
 
         .user-item {
-            padding: 12px;
-            background: #f8f9fa;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: background 0.3s;
+            padding: 12px; background: #f8f9fa; margin-bottom: 10px;
+            border-radius: 8px; display: flex; justify-content: space-between;
+            align-items: center; cursor: pointer; transition: background 0.3s;
         }
+        .user-item:hover { background: #e8eef7; }
 
-        .user-item:hover {
-            background: #e8eef7;
-        }
-
-        .user-item-info {
-            flex: 1;
-        }
-
-        .user-item-name {
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
-
-        .user-item-status {
-            font-size: 12px;
-            color: #999;
-        }
-
+        .user-item-info { flex: 1; }
+        .user-item-name { font-weight: 600; margin-bottom: 3px; }
+        .user-item-status { font-size: 12px; color: #999; }
         .user-item button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
+            background: #667eea; color: white; border: none;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;
         }
 
         .close-btn {
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            color: #667eea;
-            cursor: pointer;
-            background: none;
-            border: none;
+            float: right; font-size: 28px; font-weight: bold;
+            color: #667eea; cursor: pointer; background: none; border: none;
         }
 
-        .empty-state {
-            text-align: center;
-            color: #999;
-            padding: 40px;
-        }
-
+        .empty-state { text-align: center; color: #999; padding: 40px; }
         .group-member {
-            display: inline-block;
-            background: #e8eef7;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin: 2px;
+            display: inline-block; background: #e8eef7; padding: 4px 10px;
+            border-radius: 12px; font-size: 12px; margin: 2px;
         }
+        .hidden { display: none; }
 
-        .hidden {
-            display: none;
-        }
-
-        /* Profile Settings Modal */
-        .profile-settings {
-            text-align: center;
-        }
-
-        .profile-pic-section {
-            margin-bottom: 30px;
-            position: relative;
-            display: inline-block;
-        }
+        .profile-settings { text-align: center; }
+        .profile-pic-section { margin-bottom: 30px; position: relative; display: inline-block; }
 
         .profile-pic {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 48px;
-            margin: 0 auto 15px;
-            object-fit: cover;
-            border: 4px solid #667eea;
+            width: 120px; height: 120px; border-radius: 50%;
+            background: #667eea; display: flex; align-items: center;
+            justify-content: center; color: white; font-size: 48px;
+            margin: 0 auto 15px; object-fit: cover; border: 4px solid #667eea;
         }
 
         .pic-upload-label {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 20px;
-            border: 3px solid white;
+            position: absolute; bottom: 0; right: 0; background: #667eea;
+            color: white; border-radius: 50%; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 20px; border: 3px solid white;
         }
 
-        .profile-pic-input {
-            display: none;
-        }
-
-        .settings-form {
-            text-align: left;
-            margin-top: 20px;
-        }
-
-        .settings-form .form-group {
-            margin-bottom: 15px;
-        }
+        .profile-pic-input { display: none; }
+        .settings-form { text-align: left; margin-top: 20px; }
+        .settings-form .form-group { margin-bottom: 15px; }
 
         .setting-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;
         }
 
-        .setting-label {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .setting-value {
-            color: #667eea;
-            font-size: 14px;
-            word-break: break-all;
-        }
-
-        .btn-small {
-            padding: 8px 15px;
-            font-size: 13px;
-            margin-right: 10px;
-        }
+        .setting-label { font-weight: 600; color: #333; margin-bottom: 8px; display: block; }
+        .setting-value { color: #667eea; font-size: 14px; word-break: break-all; }
+        .btn-small { padding: 8px 15px; font-size: 13px; margin-right: 10px; }
 
         .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 15px 20px;
-            border-radius: 8px;
+            position: fixed; top: 20px; right: 20px; background: white;
+            padding: 15px 20px; border-radius: 8px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-            z-index: 2000;
-            animation: slideInNotif 0.3s ease-out;
-            max-width: 300px;
+            z-index: 2000; animation: slideInNotif 0.3s ease-out; max-width: 300px;
         }
 
         @keyframes slideInNotif {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
-        .notification-title {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .notification-body {
-            color: #333;
-            font-size: 14px;
-        }
+        .notification-title { font-weight: 600; color: #667eea; margin-bottom: 5px; }
+        .notification-body { color: #333; font-size: 14px; }
 
         .voice-preview {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 30px;
-            padding: 6px 12px;
-            margin-top: 8px;
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.2); border-radius: 30px;
+            padding: 6px 12px; margin-top: 8px;
         }
+        .voice-preview audio { height: 30px; width: 150px; }
 
-        .voice-preview audio {
-            height: 30px;
-            width: 150px;
-        }
-
-        /* ========== CALL MODAL ========== */
         .call-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #0a0a1a;
-            z-index: 3000;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: #0a0a1a; z-index: 3000; flex-direction: column;
+            align-items: center; justify-content: center; color: white;
         }
-
-        .call-modal.active {
-            display: flex;
-        }
+        .call-modal.active { display: flex; }
 
         .call-header {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
+            position: absolute; top: 20px; left: 20px; right: 20px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 10;
         }
 
         .call-info {
-            background: rgba(0,0,0,0.5);
-            padding: 10px 20px;
-            border-radius: 30px;
-            backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.5); padding: 10px 20px;
+            border-radius: 30px; backdrop-filter: blur(10px);
         }
 
-        .call-info h3 {
-            font-size: 16px;
-            margin-bottom: 3px;
-        }
-
-        .call-info p {
-            font-size: 12px;
-            opacity: 0.8;
-        }
+        .call-info h3 { font-size: 16px; margin-bottom: 3px; }
+        .call-info p { font-size: 12px; opacity: 0.8; }
 
         .call-duration {
-            background: rgba(255,255,255,0.15);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-family: monospace;
+            background: rgba(255,255,255,0.15); padding: 8px 16px;
+            border-radius: 20px; font-size: 14px; font-family: monospace;
         }
 
         .video-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .remote-video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: #1a1a2e;
+            width: 100%; height: 100%; object-fit: cover; background: #1a1a2e;
         }
 
         .local-video {
-            position: absolute;
-            bottom: 120px;
-            right: 20px;
-            width: 180px;
-            height: 135px;
-            border-radius: 12px;
-            object-fit: cover;
-            border: 2px solid rgba(255,255,255,0.3);
-            background: #1a1a2e;
-            z-index: 5;
+            position: absolute; bottom: 120px; right: 20px;
+            width: 180px; height: 135px; border-radius: 12px;
+            object-fit: cover; border: 2px solid rgba(255,255,255,0.3);
+            background: #1a1a2e; z-index: 5;
             box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
 
-        .local-video.audio-only {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            bottom: 120px;
-            right: 20px;
-        }
-
         .call-avatar {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            border: 4px solid rgba(255,255,255,0.2);
+            width: 150px; height: 150px; border-radius: 50%;
+            background: #667eea; display: flex; align-items: center;
+            justify-content: center; font-size: 60px; font-weight: bold;
+            margin-bottom: 20px; border: 4px solid rgba(255,255,255,0.2);
         }
 
-        .call-user-name {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .call-status-text {
-            font-size: 14px;
-            opacity: 0.7;
-            margin-bottom: 40px;
-        }
+        .call-user-name { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+        .call-status-text { font-size: 14px; opacity: 0.7; margin-bottom: 40px; }
 
         .audio-call-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100%;
         }
 
         .call-controls {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            z-index: 10;
+            position: absolute; bottom: 30px; left: 50%;
+            transform: translateX(-50%); display: flex; gap: 20px; z-index: 10;
         }
 
         .call-control-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            background: rgba(255,255,255,0.15);
-            color: white;
-            backdrop-filter: blur(10px);
+            width: 60px; height: 60px; border-radius: 50%;
+            border: none; cursor: pointer; font-size: 24px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; background: rgba(255,255,255,0.15);
+            color: white; backdrop-filter: blur(10px);
         }
+        .call-control-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+        .call-control-btn.end-call { background: #ff4444; }
+        .call-control-btn.end-call:hover { background: #ff2222; }
+        .call-control-btn.muted { background: #ff4444; }
 
-        .call-control-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.1);
-        }
-
-        .call-control-btn.end-call {
-            background: #ff4444;
-        }
-
-        .call-control-btn.end-call:hover {
-            background: #ff2222;
-        }
-
-        .call-control-btn.muted {
-            background: #ff4444;
-        }
-
-        .call-control-btn.active {
-            background: #4caf50;
-        }
-
-        /* Incoming call modal */
         .incoming-call-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 4000;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); z-index: 4000;
+            align-items: center; justify-content: center; backdrop-filter: blur(10px);
         }
-
-        .incoming-call-modal.active {
-            display: flex;
-        }
+        .incoming-call-modal.active { display: flex; }
 
         .incoming-call-box {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
+            background: white; padding: 40px; border-radius: 20px;
+            text-align: center; max-width: 400px; width: 90%;
             animation: incomingPulse 1.5s infinite;
         }
 
         @keyframes incomingPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+            0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); }
         }
 
         .incoming-avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            color: white;
-            font-weight: bold;
-            margin: 0 auto 20px;
+            width: 100px; height: 100px; border-radius: 50%;
+            background: #667eea; display: flex; align-items: center;
+            justify-content: center; font-size: 40px; color: white;
+            font-weight: bold; margin: 0 auto 20px;
         }
 
-        .incoming-call-box h3 {
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 20px;
-        }
+        .incoming-call-box h3 { color: #333; margin-bottom: 8px; font-size: 20px; }
+        .incoming-call-box p { color: #999; margin-bottom: 30px; font-size: 14px; }
 
-        .incoming-call-box p {
-            color: #999;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .incoming-call-actions {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-        }
-
+        .incoming-call-actions { display: flex; gap: 20px; justify-content: center; }
         .incoming-call-actions button {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 70px; height: 70px; border-radius: 50%;
+            border: none; cursor: pointer; font-size: 28px;
+            display: flex; align-items: center; justify-content: center;
             transition: transform 0.2s;
         }
+        .incoming-call-actions button:hover { transform: scale(1.1); }
+        .accept-call-btn { background: #4caf50; color: white; }
+        .reject-call-btn { background: #ff4444; color: white; }
 
-        .incoming-call-actions button:hover {
-            transform: scale(1.1);
-        }
-
-        .accept-call-btn {
-            background: #4caf50;
-            color: white;
-        }
-
-        .reject-call-btn {
-            background: #ff4444;
-            color: white;
-        }
-
-        /* Minimized call indicator */
         .minimized-call {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #667eea;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            z-index: 3500;
-            display: none;
-            align-items: center;
-            gap: 10px;
+            position: fixed; bottom: 20px; right: 20px; background: #667eea;
+            color: white; padding: 12px 20px; border-radius: 30px;
+            cursor: pointer; z-index: 3500; display: none;
+            align-items: center; gap: 10px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.4);
             animation: pulse 2s infinite;
         }
-
-        .minimized-call.active {
-            display: flex;
-        }
+        .minimized-call.active { display: flex; }
 
         @media (max-width: 768px) {
-            .auth-container {
-                flex-direction: column;
-            }
-
-            .container {
-                flex-direction: column;
-                height: auto;
-            }
-
-            .sidebar {
-                width: 100%;
-                max-height: 250px;
-            }
-
-            .message-bubble {
-                max-width: 85%;
-            }
-
-            .local-video {
-                width: 120px;
-                height: 90px;
-                bottom: 100px;
-                right: 10px;
-            }
+            .auth-container { flex-direction: column; }
+            .container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; max-height: 250px; }
+            .message-bubble { max-width: 85%; }
+            .local-video { width: 120px; height: 90px; bottom: 100px; right: 10px; }
         }
     </style>
 </head>
@@ -1188,12 +563,8 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="call-btn" id="voiceCallBtn" onclick="startVoiceCall()" title="Voice Call" disabled>
-                    📞
-                </button>
-                <button class="call-btn" id="videoCallBtn" onclick="startVideoCall()" title="Video Call" disabled>
-                    📹
-                </button>
+                <button class="call-btn" id="voiceCallBtn" onclick="startVoiceCall()" title="Voice Call" disabled>📞</button>
+                <button class="call-btn" id="videoCallBtn" onclick="startVideoCall()" title="Video Call" disabled>📹</button>
             </div>
             <div id="groupMembers"></div>
         </div>
@@ -1214,7 +585,7 @@
     </div>
 </div>
 
-<!-- ========== CALL MODAL ========== -->
+<!-- CALL MODAL -->
 <div id="callModal" class="call-modal">
     <div class="call-header">
         <div class="call-info">
@@ -1225,36 +596,25 @@
     </div>
 
     <div class="video-container" id="videoContainer">
-        <!-- Audio call screen -->
         <div class="audio-call-screen" id="audioCallScreen">
             <div class="call-avatar" id="callAvatar">U</div>
             <div class="call-user-name" id="callUserNameBig">User</div>
             <div class="call-status-text" id="callStatusText">Calling...</div>
         </div>
 
-        <!-- Video elements -->
         <video id="remoteVideo" class="remote-video" autoplay playsinline style="display:none;"></video>
         <video id="localVideo" class="local-video" autoplay playsinline muted style="display:none;"></video>
         <audio id="remoteAudio" autoplay></audio>
     </div>
 
     <div class="call-controls">
-        <button class="call-control-btn" id="muteBtn" onclick="toggleMute()" title="Mute">
-            🎤
-        </button>
-        <button class="call-control-btn" id="cameraBtn" onclick="toggleCamera()" title="Camera" style="display:none;">
-            📹
-        </button>
-        <button class="call-control-btn end-call" onclick="endCall()" title="End Call">
-            📞
-        </button>
-        <button class="call-control-btn" id="minimizeBtn" onclick="minimizeCall()" title="Minimize">
-            ⬇️
-        </button>
+        <button class="call-control-btn" id="muteBtn" onclick="toggleMute()" title="Mute">🎤</button>
+        <button class="call-control-btn" id="cameraBtn" onclick="toggleCamera()" title="Camera" style="display:none;">📹</button>
+        <button class="call-control-btn end-call" onclick="endCall()" title="End Call">📞</button>
+        <button class="call-control-btn" id="minimizeBtn" onclick="minimizeCall()" title="Minimize">⬇️</button>
     </div>
 </div>
 
-<!-- Minimized call indicator -->
 <div class="minimized-call" id="minimizedCall" onclick="restoreCall()">
     <span>📞</span>
     <span id="minimizedCallText">Call in progress</span>
@@ -1273,7 +633,7 @@
     </div>
 </div>
 
-<!-- Profile Settings Modal -->
+<!-- Profile Modal -->
 <div id="profileModal" class="modal">
     <div class="modal-content profile-settings">
         <button class="close-btn" onclick="closeProfileSettings()">✕</button>
@@ -1334,11 +694,30 @@
 </div>
 
 <script>
-    // Storage Keys
+    // ============================================================
+    // 🔥 FIREBASE CONFIGURATION (ඔබේ config + databaseURL)
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyA0H3zIgXlO43MOhQRTfqUiaqpQEi9XRNc",
+        authDomain: "hnbmsg.firebaseapp.com",
+        databaseURL: "https://hnbmsg-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "hnbmsg",
+        storageBucket: "hnbmsg.firebasestorage.app",
+        messagingSenderId: "955812071571",
+        appId: "1:955812071571:web:362345ff1429096a766566",
+        measurementId: "G-599ZWHTPZN"
+    };
+
+    // Initialize Firebase (compat version)
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ============================================================
+    // STORAGE KEYS
+    // ============================================================
     const USERS_KEY = 'hnbf_users';
     const MESSAGES_KEY = 'hnbf_messages';
     const GROUPS_KEY = 'hnbf_groups';
-    const CALLS_KEY = 'hnbf_calls';
 
     let currentUser = null;
     let currentChat = null;
@@ -1354,19 +733,20 @@
     let voiceBtn = null;
 
     // ========== CALL VARIABLES ==========
-    let callChannel = null;        // BroadcastChannel for signaling
-    let localStream = null;        // Local media stream
-    let remoteStream = null;       // Remote media stream
-    let peerConnection = null;     // RTCPeerConnection
-    let currentCall = null;        // { peerId, peerName, type: 'voice'|'video', isCaller }
+    let localStream = null;
+    let remoteStream = null;
+    let peerConnection = null;
+    let currentCall = null;
     let callTimerInterval = null;
     let callSeconds = 0;
     let isMuted = false;
     let isCameraOff = false;
     let isMinimized = false;
     let pendingCandidates = [];
+    let callListener = null;
+    let signalListener = null;
+    let callTimeoutTimer = null;
 
-    // WebRTC config (public STUN servers)
     const rtcConfig = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -1375,17 +755,17 @@
         ]
     };
 
-    // Initialize
+    // ========== INIT ==========
     function init() {
         loadData();
-        setupCallChannel();
-
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
             setUserOnline();
             showMainApp();
             startStatusUpdate();
+            listenForIncomingCalls();
+            listenToMySignals();
         }
     }
 
@@ -1401,79 +781,116 @@
         localStorage.setItem(GROUPS_KEY, JSON.stringify(allGroups));
     }
 
-    // ========== CALL SIGNALING (BroadcastChannel) ==========
-    function setupCallChannel() {
-        if (!('BroadcastChannel' in window)) {
-            console.warn('BroadcastChannel not supported');
-            return;
+    // ============================================================
+    // ========== FIREBASE SIGNALING ==============================
+    // ============================================================
+
+    // Listen for incoming calls on my Firebase path
+    function listenForIncomingCalls() {
+        if (!currentUser) return;
+
+        // Remove old listener
+        if (callListener) {
+            db.ref('calls/' + currentUser.id + '/incoming').off('value', callListener);
         }
-        callChannel = new BroadcastChannel('hnbf_calls');
-        callChannel.onmessage = async (event) => {
-            const data = event.data;
-            if (!currentUser) return;
-            if (data.to !== currentUser.id) return;
-            if (data.from === currentUser.id) return;
 
-            console.log('📞 Call signal received:', data.type);
+        callListener = db.ref('calls/' + currentUser.id + '/incoming').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
 
-            switch (data.type) {
-                case 'call-request':
-                    handleIncomingCall(data);
-                    break;
-                case 'call-accepted':
-                    await handleCallAccepted(data);
-                    break;
-                case 'call-rejected':
-                    handleCallRejected(data);
-                    break;
-                case 'call-ended':
-                    handleRemoteEndCall(data);
-                    break;
-                case 'webrtc-offer':
-                    await handleWebRTCOffer(data);
-                    break;
-                case 'webrtc-answer':
-                    await handleWebRTCAnswer(data);
-                    break;
-                case 'webrtc-ice':
-                    await handleRemoteIceCandidate(data);
-                    break;
+            // Only handle if ringing and we are not already in a call
+            if (data.status === 'ringing' &&
+                data.from !== currentUser.id &&
+                (!currentCall || currentCall.state === 'ended')) {
+                handleIncomingCall(data);
             }
-        };
-    }
-
-    function sendCallSignal(type, to, extra = {}) {
-        if (!callChannel) return;
-        callChannel.postMessage({
-            type,
-            from: currentUser.id,
-            to,
-            ...extra
         });
     }
 
-    // ========== START CALLS ==========
+    // Listen to my signal responses
+    function listenToMySignals() {
+        if (!currentUser) return;
+
+        if (signalListener) {
+            db.ref('calls/' + currentUser.id + '/signals').off('value', signalListener);
+        }
+
+        signalListener = db.ref('calls/' + currentUser.id + '/signals').on('value', async (snapshot) => {
+            const signals = snapshot.val();
+            if (!signals) return;
+
+            for (const type of Object.keys(signals)) {
+                const data = signals[type];
+                if (!data) continue;
+                if (data.from === currentUser.id) continue;
+
+                try {
+                    switch (type) {
+                        case 'accepted':
+                            await handleCallAccepted(data);
+                            break;
+                        case 'rejected':
+                            handleCallRejected(data);
+                            break;
+                        case 'ended':
+                            handleRemoteEndCall(data);
+                            break;
+                        case 'offer':
+                            await handleWebRTCOffer(data);
+                            break;
+                        case 'answer':
+                            await handleWebRTCAnswer(data);
+                            break;
+                        case 'ice-caller':
+                            await handleRemoteIceCandidate(data);
+                            break;
+                        case 'ice-receiver':
+                            await handleRemoteIceCandidate(data);
+                            break;
+                    }
+                } catch (e) {
+                    console.error('Signal handling error:', e);
+                }
+
+                // Remove processed signal
+                db.ref(`calls/${currentUser.id}/signals/${type}`).remove().catch(() => {});
+            }
+        });
+    }
+
+    // Send a signal to another user
+    async function sendSignal(toUserId, signalType, payload) {
+        const signalRef = db.ref(`calls/${toUserId}/signals/${signalType}`);
+        await signalRef.set({
+            from: currentUser.id,
+            fromName: currentUser.name,
+            fromAvatar: currentUser.avatar,
+            fromPic: currentUser.profilePic || null,
+            timestamp: Date.now(),
+            ...payload
+        });
+    }
+
+    // ============================================================
+    // ========== START CALL ======================================
+    // ============================================================
     async function startVoiceCall() {
         if (!currentChat || !currentChat.startsWith('user_')) {
-            alert('Please open a private chat first to make a call.');
-            return;
+            alert('Please open a private chat first.'); return;
         }
         const userId = parseInt(currentChat.split('_')[1]);
         const user = allUsers.find(u => u.id === userId);
         if (!user) return;
-
         await initiateCall(user, 'voice');
     }
 
     async function startVideoCall() {
         if (!currentChat || !currentChat.startsWith('user_')) {
-            alert('Please open a private chat first to make a call.');
-            return;
+            alert('Please open a private chat first.'); return;
         }
         const userId = parseInt(currentChat.split('_')[1]);
         const user = allUsers.find(u => u.id === userId);
         if (!user) return;
-
         await initiateCall(user, 'video');
     }
 
@@ -1485,28 +902,41 @@
             peerPic: user.profilePic,
             type: type,
             isCaller: true,
-            state: 'calling'
+            state: 'calling',
+            callId: 'call_' + Date.now() + '_' + currentUser.id
         };
 
-        // Show call UI
         showCallUI(user, type, 'Calling...');
 
-        // Get local media
         const gotMedia = await getLocalMedia(type);
         if (!gotMedia) {
             endCall(true);
             return;
         }
 
-        // Send call request
-        sendCallSignal('call-request', user.id, {
+        // Write call request to Firebase
+        const callData = {
+            from: currentUser.id,
+            fromName: currentUser.name,
+            fromAvatar: currentUser.avatar,
+            fromPic: currentUser.profilePic || null,
             callType: type,
-            callerName: currentUser.name,
-            callerAvatar: currentUser.avatar,
-            callerPic: currentUser.profilePic
-        });
+            callId: currentCall.callId,
+            status: 'ringing',
+            timestamp: Date.now()
+        };
 
+        await db.ref(`calls/${user.id}/incoming`).set(callData);
         showNotification('📞 Calling', `Calling ${user.name}...`);
+
+        // 30-second timeout
+        if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
+        callTimeoutTimer = setTimeout(() => {
+            if (currentCall && currentCall.state === 'calling') {
+                endCall();
+                showNotification('📞 No Answer', `${user.name} did not answer.`);
+            }
+        }, 30000);
     }
 
     async function getLocalMedia(type) {
@@ -1522,89 +952,115 @@
 
             if (type === 'video') {
                 localVideo.style.display = 'block';
-                localVideo.classList.remove('audio-only');
                 document.getElementById('cameraBtn').style.display = 'flex';
             } else {
                 localVideo.style.display = 'none';
             }
-
             return true;
         } catch (err) {
             console.error('Media error:', err);
-            alert('Could not access microphone/camera. Please allow permissions.');
+            alert('Could not access microphone/camera. Please allow permissions and use HTTPS.');
             return false;
         }
     }
 
-    // ========== INCOMING CALL ==========
+    // ============================================================
+    // ========== INCOMING CALL ===================================
+    // ============================================================
     function handleIncomingCall(data) {
-        // If already in a call
         if (currentCall && currentCall.state !== 'ended') {
-            sendCallSignal('call-rejected', data.from, { reason: 'busy' });
+            // Busy - auto reject
+            db.ref(`calls/${data.from}/signals/rejected`).set({
+                from: currentUser.id,
+                fromName: currentUser.name,
+                reason: 'busy',
+                timestamp: Date.now()
+            }).catch(() => {});
             return;
         }
 
         currentCall = {
             peerId: data.from,
-            peerName: data.callerName,
-            peerAvatar: data.callerAvatar,
-            peerPic: data.callerPic,
+            peerName: data.fromName,
+            peerAvatar: data.fromAvatar,
+            peerPic: data.fromPic,
             type: data.callType,
             isCaller: false,
-            state: 'ringing'
+            state: 'ringing',
+            callId: data.callId
         };
 
-        // Show incoming modal
         const modal = document.getElementById('incomingCallModal');
-        document.getElementById('incomingCallerName').textContent = data.callerName;
+        document.getElementById('incomingCallerName').textContent = data.fromName;
         document.getElementById('incomingCallType').textContent =
             data.callType === 'video' ? '📹 Incoming Video Call...' : '📞 Incoming Voice Call...';
 
         const avatarEl = document.getElementById('incomingAvatar');
-        if (data.callerPic) {
-            avatarEl.innerHTML = `<img src="${data.callerPic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        if (data.fromPic) {
+            avatarEl.innerHTML = `<img src="${data.fromPic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
         } else {
-            avatarEl.textContent = data.callerAvatar || 'U';
+            avatarEl.textContent = data.fromAvatar || 'U';
         }
 
         modal.classList.add('active');
         playRingtone();
-        showNotification('📞 Incoming Call', `${data.callerName} is calling...`);
+        showNotification('📞 Incoming Call', `${data.fromName} is calling...`);
     }
 
-    function acceptIncomingCall() {
+    async function acceptIncomingCall() {
         document.getElementById('incomingCallModal').classList.remove('active');
         stopRingtone();
 
         if (!currentCall) return;
-
         currentCall.state = 'connecting';
 
-        const user = allUsers.find(u => u.id === currentCall.peerId);
+        const user = allUsers.find(u => u.id === currentCall.peerId) || {
+            name: currentCall.peerName,
+            avatar: currentCall.peerAvatar,
+            profilePic: currentCall.peerPic
+        };
         showCallUI(user, currentCall.type, 'Connecting...');
 
+        // Clear incoming call entry
+        await db.ref(`calls/${currentUser.id}/incoming`).remove();
+
         // Notify caller we accepted
-        sendCallSignal('call-accepted', currentCall.peerId);
+        await db.ref(`calls/${currentCall.peerId}/signals/accepted`).set({
+            from: currentUser.id,
+            fromName: currentUser.name,
+            timestamp: Date.now()
+        });
+
+        // Cancel timeout
+        if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
     }
 
-    function rejectIncomingCall() {
+    async function rejectIncomingCall() {
         document.getElementById('incomingCallModal').classList.remove('active');
         stopRingtone();
 
         if (currentCall) {
-            sendCallSignal('call-rejected', currentCall.peerId, { reason: 'declined' });
+            await db.ref(`calls/${currentCall.peerId}/signals/rejected`).set({
+                from: currentUser.id,
+                fromName: currentUser.name,
+                reason: 'declined',
+                timestamp: Date.now()
+            }).catch(() => {});
+            await db.ref(`calls/${currentUser.id}/incoming`).remove().catch(() => {});
             currentCall = null;
         }
     }
 
-    // ========== CALL ACCEPTED (caller side) ==========
+    // ============================================================
+    // ========== CALL ACCEPTED / REJECTED ========================
+    // ============================================================
     async function handleCallAccepted(data) {
         if (!currentCall || !currentCall.isCaller) return;
-
         currentCall.state = 'connecting';
         updateCallStatus('Connecting...');
 
-        // Caller creates offer
+        if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
+
         await createPeerConnection();
         await createAndSendOffer();
     }
@@ -1622,23 +1078,21 @@
         cleanupCall();
     }
 
-    // ========== WEBRTC PEER CONNECTION ==========
+    // ============================================================
+    // ========== WEBRTC ==========================================
+    // ============================================================
     async function createPeerConnection() {
-        if (peerConnection) {
-            peerConnection.close();
-        }
+        if (peerConnection) peerConnection.close();
 
         peerConnection = new RTCPeerConnection(rtcConfig);
         remoteStream = new MediaStream();
 
-        // Add local tracks
         if (localStream) {
             localStream.getTracks().forEach(track => {
                 peerConnection.addTrack(track, localStream);
             });
         }
 
-        // Remote tracks
         peerConnection.ontrack = (event) => {
             event.streams[0].getTracks().forEach(track => {
                 remoteStream.addTrack(track);
@@ -1655,17 +1109,23 @@
             }
         };
 
-        // ICE candidates
-        peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
-                sendCallSignal('webrtc-ice', currentCall.peerId, {
-                    candidate: event.candidate
-                });
+        peerConnection.onicecandidate = async (event) => {
+            if (event.candidate && currentCall) {
+                const targetId = currentCall.peerId;
+                const signalKey = currentCall.isCaller ? 'ice-caller' : 'ice-receiver';
+
+                await db.ref(`calls/${targetId}/signals/${signalKey}`).set({
+                    from: currentUser.id,
+                    candidate: event.candidate.toJSON(),
+                    timestamp: Date.now()
+                }).catch(() => {});
             }
         };
 
         peerConnection.onconnectionstatechange = () => {
+            if (!peerConnection) return;
             console.log('Connection state:', peerConnection.connectionState);
+
             if (peerConnection.connectionState === 'connected') {
                 currentCall.state = 'connected';
                 updateCallStatus('Connected');
@@ -1677,11 +1137,8 @@
             }
         };
 
-        // Process any pending candidates
         for (const candidate of pendingCandidates) {
-            try {
-                await peerConnection.addIceCandidate(candidate);
-            } catch (e) {}
+            try { await peerConnection.addIceCandidate(candidate); } catch (e) {}
         }
         pendingCandidates = [];
     }
@@ -1691,8 +1148,11 @@
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
 
-            sendCallSignal('webrtc-offer', currentCall.peerId, {
-                offer: offer
+            await db.ref(`calls/${currentCall.peerId}/signals/offer`).set({
+                from: currentUser.id,
+                fromName: currentUser.name,
+                offer: { type: offer.type, sdp: offer.sdp },
+                timestamp: Date.now()
             });
         } catch (err) {
             console.error('Error creating offer:', err);
@@ -1702,11 +1162,12 @@
     async function handleWebRTCOffer(data) {
         if (!currentCall) return;
 
-        // If receiver hasn't created peer connection yet
         if (!peerConnection) {
             const gotMedia = await getLocalMedia(currentCall.type);
             if (!gotMedia) {
-                sendCallSignal('call-ended', currentCall.peerId);
+                await db.ref(`calls/${currentCall.peerId}/signals/ended`).set({
+                    from: currentUser.id, timestamp: Date.now()
+                }).catch(() => {});
                 cleanupCall();
                 return;
             }
@@ -1714,13 +1175,16 @@
         }
 
         try {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+            const offer = new RTCSessionDescription(data.offer);
+            await peerConnection.setRemoteDescription(offer);
 
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
 
-            sendCallSignal('webrtc-answer', currentCall.peerId, {
-                answer: answer
+            await db.ref(`calls/${currentCall.peerId}/signals/answer`).set({
+                from: currentUser.id,
+                answer: { type: answer.type, sdp: answer.sdp },
+                timestamp: Date.now()
             });
 
             startCallTimer();
@@ -1731,8 +1195,10 @@
 
     async function handleWebRTCAnswer(data) {
         if (!peerConnection) return;
+
         try {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            const answer = new RTCSessionDescription(data.answer);
+            await peerConnection.setRemoteDescription(answer);
         } catch (err) {
             console.error('Error setting answer:', err);
         }
@@ -1740,22 +1206,18 @@
 
     async function handleRemoteIceCandidate(data) {
         if (!data.candidate) return;
-
         const candidate = new RTCIceCandidate(data.candidate);
 
         if (!peerConnection || !peerConnection.remoteDescription) {
             pendingCandidates.push(candidate);
             return;
         }
-
-        try {
-            await peerConnection.addIceCandidate(candidate);
-        } catch (err) {
-            console.error('Error adding ICE candidate:', err);
-        }
+        try { await peerConnection.addIceCandidate(candidate); } catch (e) {}
     }
 
-    // ========== CALL UI ==========
+    // ============================================================
+    // ========== CALL UI =========================================
+    // ============================================================
     function showCallUI(user, type, statusText) {
         isMinimized = false;
         document.getElementById('minimizedCall').classList.remove('active');
@@ -1775,7 +1237,6 @@
             avatarEl.textContent = user.avatar || user.name.charAt(0).toUpperCase();
         }
 
-        // Show/hide video elements
         if (type === 'video') {
             document.getElementById('audioCallScreen').style.display = 'none';
             document.getElementById('cameraBtn').style.display = 'flex';
@@ -1815,7 +1276,6 @@
         const audioTracks = localStream.getAudioTracks();
         isMuted = !isMuted;
         audioTracks.forEach(track => track.enabled = !isMuted);
-
         const btn = document.getElementById('muteBtn');
         btn.classList.toggle('muted', isMuted);
         btn.textContent = isMuted ? '🔇' : '🎤';
@@ -1825,14 +1285,11 @@
         if (!localStream) return;
         const videoTracks = localStream.getVideoTracks();
         if (videoTracks.length === 0) return;
-
         isCameraOff = !isCameraOff;
         videoTracks.forEach(track => track.enabled = !isCameraOff);
-
         const btn = document.getElementById('cameraBtn');
         btn.classList.toggle('muted', isCameraOff);
         btn.textContent = isCameraOff ? '📷' : '📹';
-
         document.getElementById('localVideo').style.opacity = isCameraOff ? '0.3' : '1';
     }
 
@@ -1856,27 +1313,35 @@
         return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
     }
 
-    function endCall(silent = false) {
+    async function endCall(silent = false) {
+        if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
+
         if (currentCall && !silent) {
-            sendCallSignal('call-ended', currentCall.peerId);
+            try {
+                await db.ref(`calls/${currentCall.peerId}/signals/ended`).set({
+                    from: currentUser.id, timestamp: Date.now()
+                });
+                await db.ref(`calls/${currentCall.peerId}/incoming`).remove();
+                await db.ref(`calls/${currentUser.id}/incoming`).remove();
+            } catch (e) {}
         }
         cleanupCall();
     }
 
     function cleanupCall() {
-        // Stop timer
         if (callTimerInterval) {
             clearInterval(callTimerInterval);
             callTimerInterval = null;
         }
+        if (callTimeoutTimer) {
+            clearTimeout(callTimeoutTimer);
+            callTimeoutTimer = null;
+        }
 
-        // Stop local stream
         if (localStream) {
             localStream.getTracks().forEach(track => track.stop());
             localStream = null;
         }
-
-        // Close peer connection
         if (peerConnection) {
             peerConnection.close();
             peerConnection = null;
@@ -1885,7 +1350,6 @@
         remoteStream = null;
         pendingCandidates = [];
 
-        // Reset UI
         document.getElementById('callModal').classList.remove('active');
         document.getElementById('minimizedCall').classList.remove('active');
         document.getElementById('incomingCallModal').classList.remove('active');
@@ -1893,7 +1357,6 @@
         document.getElementById('localVideo').srcObject = null;
         document.getElementById('remoteAudio').srcObject = null;
 
-        // Reset controls
         isMuted = false;
         isCameraOff = false;
         isMinimized = false;
@@ -1903,6 +1366,10 @@
         const camBtn = document.getElementById('cameraBtn');
         camBtn.classList.remove('muted');
         camBtn.textContent = '📹';
+
+        if (currentUser) {
+            db.ref(`calls/${currentUser.id}/incoming`).remove().catch(() => {});
+        }
 
         currentCall = null;
         stopRingtone();
@@ -1915,7 +1382,6 @@
     function playRingtone() {
         try {
             ringtoneCtx = new (window.AudioContext || window.webkitAudioContext)();
-
             const playBeep = () => {
                 const osc = ringtoneCtx.createOscillator();
                 const gain = ringtoneCtx.createGain();
@@ -1928,7 +1394,6 @@
                 osc.start();
                 osc.stop(ringtoneCtx.currentTime + 0.4);
             };
-
             playBeep();
             ringtoneInterval = setInterval(playBeep, 2000);
         } catch (e) {}
@@ -1945,21 +1410,6 @@
         }
     }
 
-    // ========== UPDATE CALL BUTTONS ==========
-    function updateCallButtons() {
-        const voiceBtn = document.getElementById('voiceCallBtn');
-        const videoBtn = document.getElementById('videoCallBtn');
-
-        if (currentChat && currentChat.startsWith('user_')) {
-            voiceBtn.disabled = false;
-            videoBtn.disabled = false;
-        } else {
-            voiceBtn.disabled = true;
-            videoBtn.disabled = true;
-        }
-    }
-
-    // ========== USER ONLINE STATUS ==========
     function updateCallButtonsState() {
         const voiceBtn = document.getElementById('voiceCallBtn');
         const videoBtn = document.getElementById('videoCallBtn');
@@ -1969,7 +1419,6 @@
             videoBtn.disabled = true;
             return;
         }
-
         const userId = parseInt(currentChat.split('_')[1]);
         const user = allUsers.find(u => u.id === userId);
         if (user && user.online) {
@@ -1981,7 +1430,9 @@
         }
     }
 
-    // ========== EXISTING FUNCTIONS (auth, chat, voice message, etc.) ==========
+    // ============================================================
+    // ========== EXISTING FUNCTIONS ==============================
+    // ============================================================
 
     function checkPasswordStrength(password) {
         const indicator = document.getElementById('strengthIndicator');
@@ -2061,6 +1512,8 @@
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         showNotification('Welcome!', `Your account number: ${user.accountNumber}`);
         showMainApp();
+        listenForIncomingCalls();
+        listenToMySignals();
     }
 
     function login() {
@@ -2078,6 +1531,8 @@
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         showNotification('Welcome Back!', `Logged in as ${user.name}`);
         showMainApp();
+        listenForIncomingCalls();
+        listenToMySignals();
     }
 
     function setUserOnline() {
@@ -2091,14 +1546,18 @@
 
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
+            if (currentCall) endCall();
             const user = allUsers.find(u => u.id === currentUser.id);
             if (user) {
                 user.online = false;
                 user.lastSeen = new Date().toISOString();
                 saveData();
             }
-            // End any active call
-            if (currentCall) endCall();
+
+            if (currentUser) {
+                db.ref(`calls/${currentUser.id}`).remove().catch(() => {});
+            }
+
             localStorage.removeItem('currentUser');
             currentUser = null;
             currentChat = null;
@@ -2119,7 +1578,6 @@
     function updateUserDisplay() {
         document.getElementById('currentUserName').textContent = currentUser.name;
         document.getElementById('currentUserStatus').textContent = '🟢 Online now';
-
         if (currentUser.profilePic) {
             document.getElementById('userProfilePic').src = currentUser.profilePic;
             document.getElementById('userProfilePic').style.fontSize = '0';
@@ -2159,9 +1617,7 @@
             reader.onload = (e) => {
                 currentUser.profilePic = e.target.result;
                 const userIndex = allUsers.findIndex(u => u.id === currentUser.id);
-                if (userIndex !== -1) {
-                    allUsers[userIndex].profilePic = e.target.result;
-                }
+                if (userIndex !== -1) allUsers[userIndex].profilePic = e.target.result;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 saveData();
                 updateUserDisplay();
@@ -2176,7 +1632,6 @@
     function updateName() {
         const newName = document.getElementById('editNameInput').value.trim();
         if (!newName) { alert('Please enter a name!'); return; }
-
         currentUser.name = newName;
         const userIndex = allUsers.findIndex(u => u.id === currentUser.id);
         if (userIndex !== -1) allUsers[userIndex].name = newName;
@@ -2233,7 +1688,6 @@
     function loadChats() {
         const chatsList = document.getElementById('chatsList');
         chatsList.innerHTML = '';
-
         const privateChats = new Map();
         allMessages.forEach(msg => {
             if (msg.type === 'private') {
@@ -2337,7 +1791,6 @@
         messagesArea.innerHTML = '';
 
         let messagesToShow = [];
-
         if (currentChat === 'all') {
             messagesToShow = allMessages.filter(msg =>
                 msg.from === currentUser.id || msg.to === currentUser.id ||
@@ -2365,16 +1818,12 @@
         messagesToShow.forEach(msg => {
             const div = document.createElement('div');
             div.className = 'message ' + (msg.from === currentUser.id ? 'own' : '');
-
             const sender = allUsers.find(u => u.id === msg.from);
             let html = '';
-
             if (msg.from !== currentUser.id) {
                 html += `<div class="message-sender">${sender ? sender.name : 'Unknown'}</div>`;
             }
-
             html += `<div class="message-bubble">`;
-
             if (msg.voice) {
                 html += `<div class="voice-preview"><audio controls src="${msg.voice}"></audio></div>`;
             }
@@ -2384,7 +1833,6 @@
             if (msg.text && msg.text !== '[Voice]' && msg.text !== '🎤 Voice Message') {
                 html += `<div>${msg.text}</div>`;
             }
-
             html += `<div class="message-meta">`;
             html += `<span>${new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>`;
             if (msg.from === currentUser.id) {
@@ -2392,9 +1840,7 @@
                 else if (msg.delivered) html += `<span>✓✓ Delivered</span>`;
                 else html += `<span>✓ Sent</span>`;
             }
-            html += `</div>`;
-            html += `</div>`;
-
+            html += `</div></div>`;
             div.innerHTML = html;
             messagesArea.appendChild(div);
         });
@@ -2426,14 +1872,12 @@
     // ========== VOICE MESSAGE ==========
     async function toggleVoiceRecording() {
         if (isRecording) { stopVoiceRecording(); return; }
-
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert('Voice recording is not supported in your browser.'); return;
+            alert('Voice recording is not supported.'); return;
         }
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
             let mimeType = 'audio/webm';
             if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/mp4';
             if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/ogg';
@@ -2457,13 +1901,11 @@
 
             mediaRecorder.start();
             isRecording = true;
-
             if (voiceBtn) {
                 voiceBtn.classList.add('recording');
                 voiceBtn.textContent = '⏹️';
             }
             showNotification('🎤 Recording', 'Speak now... Click again to stop.');
-
         } catch (err) {
             console.error('Microphone error:', err);
             alert('Could not access microphone.');
@@ -2484,20 +1926,15 @@
         if (!currentChat || currentChat === 'all') {
             alert('Please select a chat first!'); return;
         }
-
         const msg = {
             id: Date.now(),
             from: currentUser.id,
             text: '🎤 Voice Message',
-            voice: voiceData,
-            image: null,
+            voice: voiceData, image: null,
             time: new Date().toISOString(),
             type: null, to: null,
-            delivered: true,
-            deliveredAt: new Date().toISOString(),
-            seen: false
+            delivered: true, deliveredAt: new Date().toISOString(), seen: false
         };
-
         if (currentChat.startsWith('user_')) {
             msg.type = 'private';
             msg.to = parseInt(currentChat.split('_')[1]);
@@ -2505,7 +1942,6 @@
             msg.type = 'group';
             msg.to = parseInt(currentChat.split('_')[1]);
         }
-
         allMessages.push(msg);
         saveData();
         displayMessages();
@@ -2533,11 +1969,8 @@
             voice: null,
             time: new Date().toISOString(),
             type: null, to: null,
-            delivered: true,
-            deliveredAt: new Date().toISOString(),
-            seen: false
+            delivered: true, deliveredAt: new Date().toISOString(), seen: false
         };
-
         if (currentChat.startsWith('user_')) {
             msg.type = 'private';
             msg.to = parseInt(currentChat.split('_')[1]);
@@ -2545,7 +1978,6 @@
             msg.type = 'group';
             msg.to = parseInt(currentChat.split('_')[1]);
         }
-
         allMessages.push(msg);
         saveData();
         messageInput.value = '';
@@ -2560,7 +1992,7 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 window.selectedImage = e.target.result;
-                showNotification('Image Selected', 'Click Send to share the image');
+                showNotification('Image Selected', 'Click Send to share');
             };
             reader.readAsDataURL(file);
         }
@@ -2581,7 +2013,6 @@
         const userList = document.getElementById('userList');
         const searchInput = document.getElementById('searchInput');
         const query = searchInput.value.toLowerCase();
-
         let users = allUsers.filter(u => u.id !== currentUser.id);
         if (query) {
             users = users.filter(u =>
@@ -2589,7 +2020,6 @@
                 u.name.toLowerCase().includes(query)
             );
         }
-
         userList.innerHTML = '';
         users.forEach(user => {
             const div = document.createElement('div');
@@ -2604,7 +2034,6 @@
             `;
             userList.appendChild(div);
         });
-
         if (users.length === 0) {
             userList.innerHTML = '<div class="empty-state">No users found</div>';
         }
@@ -2639,7 +2068,6 @@
         const userList = document.getElementById('groupUserList');
         const searchInput = document.getElementById('groupSearchInput');
         const query = searchInput.value.toLowerCase();
-
         let users = allUsers.filter(u => u.id !== currentUser.id);
         if (query) {
             users = users.filter(u =>
@@ -2647,7 +2075,6 @@
                 u.name.toLowerCase().includes(query)
             );
         }
-
         userList.innerHTML = '';
         users.forEach(user => {
             const isSelected = selectedGroupMembers.includes(user.id);
@@ -2696,7 +2123,6 @@
         const groupName = document.getElementById('groupNameInput').value.trim();
         if (!groupName) { alert('Please enter a group name!'); return; }
         if (selectedGroupMembers.length === 0) { alert('Please add at least one member!'); return; }
-
         const group = {
             id: Date.now(),
             name: groupName,
@@ -2704,7 +2130,6 @@
             createdBy: currentUser.id,
             createdAt: new Date().toISOString()
         };
-
         allGroups.push(group);
         saveData();
         closeCreateGroup();
@@ -2773,7 +2198,6 @@
         }, 2000);
     }
 
-    // ========== ENTER KEY ==========
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('messageInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
